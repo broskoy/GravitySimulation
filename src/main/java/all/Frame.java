@@ -6,6 +6,8 @@ import javax.swing.JFrame;
 
 public class Frame extends JFrame{
     
+    final static int HEIGHT = 640;
+    final static int WIDTH = 1080;
     SimPanel simPanel;
 
     public Frame() {
@@ -17,7 +19,7 @@ public class Frame extends JFrame{
 
         // window settings
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(Config.WIDTH + 50, Config.HEIGHT + 70);
+        this.setSize(WIDTH + 50, HEIGHT + 70);
         this.setResizable(false);
         this.setTitle("Gravity Simulation");
         this.getContentPane().setBackground(Color.darkGray);

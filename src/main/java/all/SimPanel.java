@@ -27,7 +27,7 @@ public class SimPanel extends JPanel implements Runnable {
 
     public SimPanel() {
         //panel settings
-        this.setSize(Config.WIDTH, Config.HEIGHT);
+        this.setSize(Frame.WIDTH, Frame.HEIGHT);
         this.setBackground(new Color(40, 0, 40));
         this.setLocation(20, 20);
         this.setLayout(null);
@@ -139,13 +139,13 @@ public class SimPanel extends JPanel implements Runnable {
             if (first.x < first.radius) {
                 first.vx = Math.abs(first.vx);
             }
-            if (Config.WIDTH - first.radius < first.x) {
+            if (Frame.WIDTH - first.radius < first.x) {
                 first.vx = -Math.abs(first.vx);
             }
             if (first.y < first.radius) {
                 first.vy = Math.abs(first.vy);
             }
-            if (Config.HEIGHT - first.radius < first.y) {
+            if (Frame.HEIGHT - first.radius < first.y) {
                 first.vy = -Math.abs(first.vy);
             }
         } 
@@ -179,8 +179,8 @@ public class SimPanel extends JPanel implements Runnable {
         Random rand = new Random();
 
         for (int i=0; i<number; i++){
-            int randomx = rand.nextInt(Config.WIDTH);
-            int randomy = rand.nextInt(Config.HEIGHT);
+            int randomx = rand.nextInt(Frame.WIDTH);
+            int randomy = rand.nextInt(Frame.HEIGHT);
             particles.add(new Particle(randomx, randomy, type, mass));
             System.out.println(type);
         }
