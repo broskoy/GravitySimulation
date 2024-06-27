@@ -12,11 +12,16 @@ public class SimPanel extends JPanel implements Runnable {
 
     Thread gameThread;
 
+    // simulatin parameters
     final static int FPS = 60;
     final static double GRAVITY = 1; // strength of gravity
-    final static double DECELERATOR = 0.999; // compensates for errors
+    final static double DECELERATOR = 0.9999; // compensates for errors
     final static boolean MERGE = false; // if particles should merge
     final static double SCALE = 40; // pixels in a meter
+
+    // position parameters
+    final static int borderX = 20;
+    final static int borderY = 20;
 
     public static ArrayList<Particle> particles = new ArrayList<>(); 
 
@@ -28,8 +33,8 @@ public class SimPanel extends JPanel implements Runnable {
     public SimPanel() {
         //panel settings
         this.setSize(Frame.WIDTH, Frame.HEIGHT);
-        this.setBackground(new Color(40, 0, 40));
-        this.setLocation(20, 20);
+        this.setBackground(new Color(20, 0, 20));
+        this.setLocation(borderX, borderY);
         this.setLayout(null);
         this.setFocusable(true);
         this.setDoubleBuffered(true);
@@ -161,14 +166,27 @@ public class SimPanel extends JPanel implements Runnable {
         }
     }
 
+    // draws the white refrence in the corner to understand scale
+    private void drawReference(Graphics2D g2d) {
+        int fromX = borderX + 20;
+        int fromY = borderY + Frame.HEIGHT - 40;
+        int toX = fromX + (int) SCALE;
+        int toY = fromY;
+
+        g2d.setColor(Color.white);
+        g2d.drawLine(fromX, fromY, toX, toY);
+    }
+
     // the primary paint method called each frame
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        for (Particle p : particles){
-            p.draw(g2d);
+        for (Particle particle : particles){
+            particle.draw(g2d);
         }
+
+        drawReference(g2d);
 
         g2d.dispose();
     }
