@@ -13,10 +13,10 @@ public class SimPanel extends JPanel implements Runnable {
     Thread gameThread;
 
     final static int FPS = 60;
-    final static double GRAVITY = 1000.0; // strength of gravity
+    final static double GRAVITY = 1; // strength of gravity
     final static double DECELERATOR = 0.999; // compensates for errors
     final static boolean MERGE = false; // if particles should merge
-    final static double SCALE = 100; // pixels in a meter
+    final static double SCALE = 40; // pixels in a meter
 
     public static ArrayList<Particle> particles = new ArrayList<>(); 
 
@@ -58,7 +58,7 @@ public class SimPanel extends JPanel implements Runnable {
                 // the target time minus current time
                 double remainingTime = nextDrawTime - System.nanoTime();
                 
-                // to avoid negatives and convert from nano to milisecods
+                // avoiding negatives and convert from nano to milisecods
                 remainingTime = Math.max(remainingTime, 0) / 1e6;
 
                 // wait until next draw
@@ -80,28 +80,22 @@ public class SimPanel extends JPanel implements Runnable {
 
             for (Particle second : particles) {
                 if (first != second) {
-                    // the distance from the first particle to the other in pixels
-                    Vector distance = new Vector(); 
-                    distance.x = second.x - first.x;
-                    distance.y = second.y - first.y;
-                    double safeDist = Math.max(distance.length(), 1); // avoiding division by 0
-                    //double scaleDist = safeDist / Config.SCALE; // final distance in meters
+                    // the distance from the first particle to the other in pixels 
+                    double distanceX = second.x - first.x;
+                    double distanceY = second.y - first.y;
+                    double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                    distance = Math.max(distance, 1); // avoiding division by 0
+                    double scaledDist = distance / SCALE; // final distance in meters
 
                     // calculate the force felt by the first (the formula can be changed)
                     double force;
-                    if (safeDist < 10){
-                        force = - GRAVITY * first.mass * second.mass;
-                    }else {
-                        force = GRAVITY * first.mass * second.mass; // Math.sqrt(scaleDist);
-                    }
+                    force = GRAVITY * first.mass * second.mass / scaledDist;
                     force *= attraction[first.type][second.type];
-                    finalForceX += distance.x / safeDist * force;
-                    finalForceY += distance.y / safeDist * force;
-
-                    
+                    finalForceX += distanceX / scaledDist * force;
+                    finalForceY += distanceY / scaledDist * force;
 
                     // merge with combined mass and momentum vf = (m1*v1 + m2*v2) / (m1+m2)
-                    if (MERGE && !(first.marked || second.marked) && (distance.length() < first.radius + second.radius)){
+                    if (MERGE && !(first.marked || second.marked) && (distance < first.radius + second.radius)){
                         double resultingVX = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
                         double resultingVY = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
                         if (first.mass < second.mass){
@@ -156,13 +150,18 @@ public class SimPanel extends JPanel implements Runnable {
             particle.y += particle.vy / FPS;
         }
 
-        // delete all marked
+        deleteMarked();
+    }
+
+    // delete all marked
+    private void deleteMarked() {
         for (int i=0; i<particles.size(); i++){
             if (particles.get(i).marked)
                 particles.remove(i);
         }
     }
 
+    // the primary paint method called each frame
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
@@ -182,7 +181,6 @@ public class SimPanel extends JPanel implements Runnable {
             int randomx = rand.nextInt(Frame.WIDTH);
             int randomy = rand.nextInt(Frame.HEIGHT);
             particles.add(new Particle(randomx, randomy, type, mass));
-            System.out.println(type);
         }
     }
 }
