@@ -102,15 +102,14 @@ public class SimPanel extends JPanel implements Runnable {
 
                     // merge with combined mass and momentum vf = (m1*v1 + m2*v2) / (m1+m2)
                     if (MERGE && !(first.marked || second.marked) && (distance < first.radius + second.radius)){
-                        double resultingVX = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
-                        double resultingVY = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
-                        double resultingMass = first.mass + second.mass;
-                        double resultingX = (first.x + second.x) / 2;
-                        double resultingY = (first.y + second.y) / 2;
-                        int resultingType = first.type;
-                        Particle result = new Particle(resultingX, resultingY, resultingType, resultingMass);
-                        result.vx = resultingVX;
-                        result.vy = resultingVY;
+                        Particle result = new Particle();
+
+                        result.vx = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
+                        result.vy = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
+                        result.mass = first.mass + second.mass;
+                        result.x = (first.x + second.x) / 2;
+                        result.y = (first.y + second.y) / 2;
+                        result.type = first.type; // TODO: think abot this
                         result.updateRadius();
 
                         particlesToAdd.add(result);
@@ -197,14 +196,20 @@ public class SimPanel extends JPanel implements Runnable {
         g2d.dispose();
     }
 
-    // creates a specified amount of particles randomly
+    // creates a specified amount of particles with random positions
     public static void create(int number, int type, int mass){
         Random rand = new Random();
 
         for (int i=0; i<number; i++){
-            int randomx = rand.nextInt(Frame.WIDTH);
-            int randomy = rand.nextInt(Frame.HEIGHT);
-            particles.add(new Particle(randomx, randomy, type, mass));
+            Particle particle = new Particle();
+
+            particle.x = rand.nextInt(Frame.WIDTH);
+            particle.y = rand.nextInt(Frame.HEIGHT);
+            particle.type = type;
+            particle.mass = mass;
+            particle.updateRadius();
+
+            particles.add(particle);
         }
     }
 }

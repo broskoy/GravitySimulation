@@ -14,13 +14,13 @@ public class Particle {
     double radius;
     boolean marked;
 
-    public Particle(double x, double y, int type, double mass){
-        this.x = x;
-        this.y = y;
+    public Particle(){
+        this.x = 0;
+        this.y = 0;
         this.vx = 0;
         this.vy = 0;
-        this.type = type;
-        this.mass = mass;
+        this.type = 0;
+        this.mass = 1;
         this.radius = Math.sqrt(mass);
         this.marked = false;
     }
