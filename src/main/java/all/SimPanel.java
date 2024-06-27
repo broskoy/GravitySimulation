@@ -14,9 +14,9 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulatin parameters
     final static int FPS = 60;
-    final static double GRAVITY = 1; // strength of gravity
+    final static double GRAVITY = 0.3; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static boolean MERGE = false; // if particles should merge
+    final static boolean MERGE = true; // if particles should merge
     final static double SCALE = 40; // pixels in a meter
 
     // position parameters
@@ -77,7 +77,8 @@ public class SimPanel extends JPanel implements Runnable {
     }
 
     public void update() {
-        
+        ArrayList<Particle> particlesToAdd = new ArrayList<>();
+
         // we calculate the velocity through the forces particle have on eachother
         for (Particle first : particles) {
             double finalForceX = 0;
@@ -103,19 +104,19 @@ public class SimPanel extends JPanel implements Runnable {
                     if (MERGE && !(first.marked || second.marked) && (distance < first.radius + second.radius)){
                         double resultingVX = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
                         double resultingVY = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
-                        if (first.mass < second.mass){
-                            second.vx += resultingVX;
-                            second.vy += resultingVY;
-                            second.mass += first.mass;
-                            second.updateRadius();
-                            first.marked = true;
-                        } else {
-                            first.vx += resultingVX;
-                            first.vy += resultingVY;
-                            first.mass += second.mass;
-                            first.updateRadius();
-                            second.marked = true;
-                        }
+                        double resultingMass = first.mass + second.mass;
+                        double resultingX = (first.x + second.x) / 2;
+                        double resultingY = (first.y + second.y) / 2;
+                        int resultingType = first.type;
+                        Particle result = new Particle(resultingX, resultingY, resultingType, resultingMass);
+                        result.vx = resultingVX;
+                        result.vy = resultingVY;
+                        result.updateRadius();
+
+                        particlesToAdd.add(result);
+
+                        first.marked = true;
+                        second.marked = true;
                     }
 
                     
@@ -153,6 +154,11 @@ public class SimPanel extends JPanel implements Runnable {
         for (Particle particle : particles) {
             particle.x += particle.vx / FPS;
             particle.y += particle.vy / FPS;
+        }
+
+        // move them from one to the other
+        for (Particle particle : particlesToAdd){
+            particles.add(particle);
         }
 
         deleteMarked();

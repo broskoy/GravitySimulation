@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args){
         new Frame();
-        SimPanel.create(5, 0, 4);
+        SimPanel.create(20, 0, 4);
     }
 }
 
