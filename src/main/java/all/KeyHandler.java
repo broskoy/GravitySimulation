@@ -5,10 +5,14 @@ import java.awt.event.KeyListener;
 
 public class KeyHandler implements KeyListener {
 
+    // active while pressed
     public boolean upPressed;
     public boolean leftPressed;
     public boolean downPressed;
     public boolean rightPressed;
+
+    // active on toggle
+    public boolean spacePressed;
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -24,6 +28,8 @@ public class KeyHandler implements KeyListener {
             case 83: downPressed = true; // s
                 break;
             case 68: rightPressed = true; // d
+                break;
+            case 32: spacePressed = !spacePressed;
                 break;
             case 75: System.exit(43);
                 break;

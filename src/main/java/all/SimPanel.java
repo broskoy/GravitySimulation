@@ -16,14 +16,14 @@ public class SimPanel extends JPanel implements Runnable {
     // camera variables
     int cameraPosX = -Frame.WIDTH / 2;
     int cameraPosY = -Frame.HEIGHT / 2;
-    int cameraSpeed = 3;
+    int cameraSpeed = 5;
 
     // keyhandler for input
     KeyHandler keyHandler = new KeyHandler();
 
     // simulatin parameters
     final static int FPS = 60;
-    final static double GRAVITY = 0.3; // strength of gravity
+    final static double GRAVITY = 1; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
     final static boolean MERGE = true; // if particles should merge
     final static double SCALE = 40; // pixels in a meter
@@ -67,8 +67,11 @@ public class SimPanel extends JPanel implements Runnable {
 
         while (gameThread != null) {
 
-            update();
+            // check for paused game
+            if (!keyHandler.spacePressed) 
+                updatePhysics();
 
+            updateCamera();
             repaint();
 
             try {
@@ -107,7 +110,7 @@ public class SimPanel extends JPanel implements Runnable {
     }
 
     // this method controls the mechanics of each frame
-    public void update() {
+    public void updatePhysics() {
         ArrayList<Particle> particlesToAdd = new ArrayList<>();
 
         // we calculate the velocity through the forces particle have on eachother
@@ -191,8 +194,6 @@ public class SimPanel extends JPanel implements Runnable {
         }
 
         deleteMarked();
-
-        updateCamera();
     }
 
     // delete all marked
@@ -221,7 +222,7 @@ public class SimPanel extends JPanel implements Runnable {
     private void drawReference(Graphics2D g2d) {
         // coordinates relative to frame
         int fromX = borderX + 20;
-        int fromY = borderY + Frame.HEIGHT - 40;
+        int fromY = borderY + Frame.HEIGHT - 50;
         int toX = fromX + (int) SCALE;
         int toY = fromY;
 
@@ -252,8 +253,8 @@ public class SimPanel extends JPanel implements Runnable {
         for (int i=0; i<number; i++){
             Particle particle = new Particle();
 
-            particle.x = rand.nextInt(Frame.WIDTH);
-            particle.y = rand.nextInt(Frame.HEIGHT);
+            particle.x = rand.nextInt((int)BARRIER) - BARRIER / 2;
+            particle.y = rand.nextInt((int)BARRIER) - BARRIER / 2;
             particle.type = type;
             particle.changeMass(mass);
 
