@@ -4,7 +4,7 @@ public class Main {
 
     public static void main(String[] args){
         new Frame();
-        SimPanel.create(20, 0, 4);
+        SimPanel.create(10, 0, 4);
     }
 }
 
@@ -19,3 +19,4 @@ public class Main {
 // TODO: panel can be bigger but with camera movement (and a minimap?)
 // TODO: make merge delete both particles and create a new one to delete the if
 // TODO: center SimPanel in Frame (with layout?)
+// TODO: separate update into smaller bits

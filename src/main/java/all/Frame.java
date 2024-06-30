@@ -11,11 +11,7 @@ public class Frame extends JFrame{
     SimPanel simPanel;
 
     public Frame() {
-        // initialize the simulation panel
-        simPanel = new SimPanel();
-        this.getLayeredPane().add(simPanel, Integer.valueOf(1));
-        simPanel.requestFocus();
-        simPanel.startGameThread();
+        addSimPanel();
 
         // window settings
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -26,4 +22,12 @@ public class Frame extends JFrame{
         this.setLayout(null);
         this.setVisible(true);
     }    
+
+    private void addSimPanel() {
+        // initialize the simulation panel
+        simPanel = new SimPanel();
+        this.getLayeredPane().add(simPanel, Integer.valueOf(1));
+        simPanel.requestFocus();
+        simPanel.startGameThread();
+    }
 }

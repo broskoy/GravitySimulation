@@ -10,7 +10,16 @@ import javax.swing.JPanel;
 
 public class SimPanel extends JPanel implements Runnable {  
 
+    // allocate a thread to run 
     Thread gameThread;
+
+    // camera variables
+    int cameraPosX = -Frame.WIDTH / 2;
+    int cameraPosY = -Frame.HEIGHT / 2;
+    int cameraSpeed = 3;
+
+    // keyhandler for input
+    KeyHandler keyHandler = new KeyHandler();
 
     // simulatin parameters
     final static int FPS = 60;
@@ -18,11 +27,13 @@ public class SimPanel extends JPanel implements Runnable {
     final static double DECELERATOR = 0.9999; // compensates for errors
     final static boolean MERGE = true; // if particles should merge
     final static double SCALE = 40; // pixels in a meter
+    final static double BARRIER = 1000; // distance in pixels to the edges of the universe
 
     // position parameters
     final static int borderX = 20;
     final static int borderY = 20;
 
+    // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
 
     Double attraction[][] = {{1.0, 1.0, 0.0, -1.0}, 
@@ -35,6 +46,7 @@ public class SimPanel extends JPanel implements Runnable {
         this.setSize(Frame.WIDTH, Frame.HEIGHT);
         this.setBackground(new Color(20, 0, 20));
         this.setLocation(borderX, borderY);
+        this.addKeyListener(keyHandler);
         this.setLayout(null);
         this.setFocusable(true);
         this.setDoubleBuffered(true);
@@ -76,6 +88,25 @@ public class SimPanel extends JPanel implements Runnable {
         }
     }
 
+    // moves the camera position
+    private void updateCamera() {
+        
+        if (keyHandler.upPressed)
+            cameraPosY -= cameraSpeed;
+        
+        if (keyHandler.downPressed)
+            cameraPosY += cameraSpeed;
+        
+        if (keyHandler.leftPressed)
+            cameraPosX -= cameraSpeed;
+
+        if (keyHandler.rightPressed)
+            cameraPosX += cameraSpeed;
+
+        // System.out.println(keyHandler.upPressed + " " + keyHandler.downPressed+ " " + keyHandler.leftPressed+ " " + keyHandler.rightPressed);
+    }
+
+    // this method controls the mechanics of each frame
     public void update() {
         ArrayList<Particle> particlesToAdd = new ArrayList<>();
 
@@ -106,11 +137,10 @@ public class SimPanel extends JPanel implements Runnable {
 
                         result.vx = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
                         result.vy = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
-                        result.mass = first.mass + second.mass;
+                        result.changeMass(first.mass + second.mass);
                         result.x = (first.x + second.x) / 2;
                         result.y = (first.y + second.y) / 2;
                         result.type = first.type; // TODO: think abot this
-                        result.updateRadius();
 
                         particlesToAdd.add(result);
 
@@ -135,16 +165,16 @@ public class SimPanel extends JPanel implements Runnable {
             first.vy *= DECELERATOR;
 
             // bounce off walls
-            if (first.x < first.radius) {
+            if (first.x < - BARRIER + first.radius) {
                 first.vx = Math.abs(first.vx);
             }
-            if (Frame.WIDTH - first.radius < first.x) {
+            if (BARRIER - first.radius < first.x) {
                 first.vx = -Math.abs(first.vx);
             }
-            if (first.y < first.radius) {
+            if (first.y < - BARRIER + first.radius) {
                 first.vy = Math.abs(first.vy);
             }
-            if (Frame.HEIGHT - first.radius < first.y) {
+            if (BARRIER - first.radius < first.y) {
                 first.vy = -Math.abs(first.vy);
             }
         } 
@@ -161,6 +191,8 @@ public class SimPanel extends JPanel implements Runnable {
         }
 
         deleteMarked();
+
+        updateCamera();
     }
 
     // delete all marked
@@ -171,13 +203,29 @@ public class SimPanel extends JPanel implements Runnable {
         }
     }
 
-    // draws the white refrence in the corner to understand scale
+    // draw the border of the universe
+    private void drawBorder(Graphics2D g2d) {
+        int drawx = -(int)BARRIER;
+        int drawy = -(int)BARRIER;
+        int drawlen = 2*(int)BARRIER;
+
+        // compensate for camera
+        drawx -= cameraPosX;
+        drawy -= cameraPosY;
+
+        g2d.setColor(Color.white);
+        g2d.drawRect(drawx, drawy, drawlen, drawlen);
+    }
+
+    // draws the white refrence of a meter in the corner
     private void drawReference(Graphics2D g2d) {
+        // coordinates relative to frame
         int fromX = borderX + 20;
         int fromY = borderY + Frame.HEIGHT - 40;
         int toX = fromX + (int) SCALE;
         int toY = fromY;
 
+        // draw the line
         g2d.setColor(Color.white);
         g2d.drawLine(fromX, fromY, toX, toY);
     }
@@ -188,9 +236,10 @@ public class SimPanel extends JPanel implements Runnable {
         Graphics2D g2d = (Graphics2D) g;
 
         for (Particle particle : particles){
-            particle.draw(g2d);
+            particle.draw(g2d, cameraPosX, cameraPosY);
         }
 
+        drawBorder(g2d);
         drawReference(g2d);
 
         g2d.dispose();
@@ -206,8 +255,7 @@ public class SimPanel extends JPanel implements Runnable {
             particle.x = rand.nextInt(Frame.WIDTH);
             particle.y = rand.nextInt(Frame.HEIGHT);
             particle.type = type;
-            particle.mass = mass;
-            particle.updateRadius();
+            particle.changeMass(mass);
 
             particles.add(particle);
         }
