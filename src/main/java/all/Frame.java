@@ -6,8 +6,8 @@ import javax.swing.JFrame;
 
 public class Frame extends JFrame{
     
-    final static int HEIGHT = 640;
-    final static int WIDTH = 1080;
+    final static int HEIGHT = 1080;
+    final static int WIDTH = 1400;
     SimPanel simPanel;
 
     public Frame() {
