@@ -11,6 +11,7 @@ public class MainFrame extends JFrame{
     final static int WIDTH = 1440;
     SimPanel simPanel;
     ToolPanel toolPanel;
+    OptionPanel optionPanel;
 
     public static void main(String[] args) {
         new MainFrame();
@@ -20,6 +21,7 @@ public class MainFrame extends JFrame{
         // add frame components
         addSimPanel();
         addToolPanel();
+        addOptionPanel();
 
         // frame settings
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -47,6 +49,12 @@ public class MainFrame extends JFrame{
         toolPanel = new ToolPanel();
         this.getLayeredPane().add(toolPanel, Integer.valueOf(2));
     }
+
+    private void addOptionPanel() {
+        // initialize settings panel
+        optionPanel = new OptionPanel();
+        this.getLayeredPane().add(optionPanel, Integer.valueOf(2));
+    }
 }
 
 // TODO: fix conservation of momentum in SimPanel.update()
@@ -55,7 +63,6 @@ public class MainFrame extends JFrame{
 // TODO: test with higher resolotion (prbably make distance independent of pixels)
 // TODO: make interface for configurating variables
 // TODO: make an edit mode where you can add particles
-// TODO: panel can be bigger but with camera movement (and a minimap?)
-// TODO: make merge delete both particles and create a new one to delete the if
+// TODO: add minimap in the corner
 // TODO: center SimPanel in Frame (with layout?)
 // TODO: separate update into smaller bits
