@@ -14,8 +14,8 @@ public class SimPanel extends JPanel implements Runnable {
     Thread gameThread;
 
     // camera variables
-    int cameraPosX = -Frame.WIDTH / 2;
-    int cameraPosY = -Frame.HEIGHT / 2;
+    int cameraPosX = -MainFrame.WIDTH / 2;
+    int cameraPosY = -MainFrame.HEIGHT / 2;
     int cameraSpeed = 5;
 
     // keyhandler for input
@@ -43,7 +43,7 @@ public class SimPanel extends JPanel implements Runnable {
 
     public SimPanel() {
         //panel settings
-        this.setSize(Frame.WIDTH, Frame.HEIGHT);
+        this.setSize(MainFrame.WIDTH, MainFrame.HEIGHT);
         this.setBackground(new Color(20, 0, 20));
         this.setLocation(borderX, borderY);
         this.addKeyListener(keyHandler);
@@ -222,7 +222,7 @@ public class SimPanel extends JPanel implements Runnable {
     private void drawReference(Graphics2D g2d) {
         // coordinates relative to frame
         int fromX = borderX + 20;
-        int fromY = borderY + Frame.HEIGHT - 50;
+        int fromY = borderY + MainFrame.HEIGHT - 50;
         int toX = fromX + (int) SCALE;
         int toY = fromY;
 
