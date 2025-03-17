@@ -7,8 +7,8 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame{
 
-    final static int WIDTH = 1920; // x
-    final static int HEIGHT = 1080; // y
+    final static int WIDTH = 1280; // x
+    final static int HEIGHT = 720; // y
     SimPanel simPanel;
     ToolPanel toolPanel;
     OptionPanel optionPanel;
@@ -33,7 +33,7 @@ public class MainFrame extends JFrame{
         this.setVisible(true);
 
         // add particles to simulate
-        SimPanel.create(10, 0, 16);
+        SimPanel.create(10, 0, 1);
     }    
 
     private void addSimPanel() {
@@ -41,7 +41,7 @@ public class MainFrame extends JFrame{
         simPanel = new SimPanel();
         this.getLayeredPane().add(simPanel, Integer.valueOf(1));
         simPanel.requestFocus();
-        simPanel.startGameThread();
+        simPanel.startSimulationThread();
     }
 
     private void addToolPanel() {
@@ -57,10 +57,9 @@ public class MainFrame extends JFrame{
     }
 }
 
-// TODO: fix conservation of momentum in SimPanel.update()
+// TODO: fix conservation of momentum in SimPanel.updateMerge()
 // TODO: there is a better way to calculate acceleration
 // TODO: make collision
-// TODO: pairing by iterating for(j=i+1;j<n;j++) to avoid double checking
 // TODO: test with higher resolotion (prbably make distance independent of pixels)
 // TODO: make interface for configurating variables
 // TODO: make an edit mode where you can add particles

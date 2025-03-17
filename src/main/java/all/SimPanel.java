@@ -11,25 +11,24 @@ import javax.swing.JPanel;
 public class SimPanel extends JPanel implements Runnable {
 
     // allocate a thread to run 
-    Thread gameThread;
+    Thread simulationThread;
 
-    // camera variables
-    int cameraPosX = -MainFrame.WIDTH / 2;
-    int cameraPosY = -MainFrame.HEIGHT / 2;
-    int cameraSpeed = 5;
-
+    Camera camera = new Camera();
+    
     // keyhandler for input
     KeyHandler keyHandler = new KeyHandler();
 
+    // simulation features
+    final static boolean MERGE = false; // if particles should merge (exclusive with collision)
+    final static boolean GRAVITY = false; // if particles should have gravity
+    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
+
     // simulatin parameters
-    final static int FPS = 60;
+    public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
+    final static int FPS = 60; // frames per second
     final static double GRAVITYSTRENGTH = 1; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = true; // if particles should have gravity
-    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
-    public final static double SCALE = 10; // pixels in a unit
-    final static double BARRIER = 400; // distance in pixels to the edges of the universe
+    final static double BARRIER = 60; // distance in units to the edges of the universe
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -51,9 +50,9 @@ public class SimPanel extends JPanel implements Runnable {
         this.setVisible(true);
     }
 
-    public void startGameThread() {
-        gameThread = new Thread(this);
-        gameThread.start();
+    public void startSimulationThread() {
+        simulationThread = new Thread(this);
+        simulationThread.start();
     }
 
     @Override
@@ -63,7 +62,7 @@ public class SimPanel extends JPanel implements Runnable {
         double drawInterval = 1e9 / FPS; 
         double nextDrawTime = System.nanoTime() + drawInterval;
 
-        while (gameThread != null) {
+        while (simulationThread != null) {
 
             // check for paused game
             if (!keyHandler.spacePressed) 
@@ -93,16 +92,16 @@ public class SimPanel extends JPanel implements Runnable {
     private void updateCamera() {
         
         if (keyHandler.upPressed)
-            cameraPosY -= cameraSpeed;
+            camera.y -= camera.speed;
         
         if (keyHandler.downPressed)
-            cameraPosY += cameraSpeed;
+            camera.y += camera.speed;
         
         if (keyHandler.leftPressed)
-            cameraPosX -= cameraSpeed;
+            camera.x -= camera.speed;
 
         if (keyHandler.rightPressed)
-            cameraPosX += cameraSpeed;
+            camera.x += camera.speed;
 
         // System.out.println(keyHandler.upPressed + " " + keyHandler.downPressed+ " " + keyHandler.leftPressed+ " " + keyHandler.rightPressed);
     }
@@ -191,7 +190,7 @@ public class SimPanel extends JPanel implements Runnable {
         double distanceX = second.x - first.x;
         double distanceY = second.y - first.y;
         double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        double scaledDistance = distance / SCALE; // final distance in units
+        double scaledDistance = distance; // final distance in units
 
         return scaledDistance;
     }
@@ -279,29 +278,79 @@ public class SimPanel extends JPanel implements Runnable {
 
     // draw the border of the universe
     private void drawBorder(Graphics2D g2d) {
-        int drawx = -(int)BARRIER;
-        int drawy = -(int)BARRIER;
-        int drawlen = 2*(int)BARRIER;
+        // the coordinates of the the bounding box
+        double drawx = -BARRIER;
+        double drawy = -BARRIER;
+        double drawlen = 2 * BARRIER;
+
+        // compensate for scale
+        drawx *= SCALE;
+        drawy *= SCALE;
+        drawlen *= SCALE;
+
+        // compensate for screen center
+        drawx += MainFrame.WIDTH / 2;
+        drawy += MainFrame.HEIGHT / 2;
 
         // compensate for camera
-        drawx -= cameraPosX;
-        drawy -= cameraPosY;
+        drawx -= camera.x * SCALE;
+        drawy -= camera.y * SCALE;
 
         g2d.setColor(Color.white);
-        g2d.drawRect(drawx, drawy, drawlen, drawlen);
+        g2d.drawRect((int)drawx, (int)drawy, (int)drawlen, (int)drawlen);
     }
 
-    // draws the white refrence of a meter in the corner
+    // draw all of the particles
+    private void drawParticles(Graphics2D g2d) {
+        for (Particle particle : particles) {
+            // the coordinates of the the bounding box
+            double drawx = particle.x - particle.radius;
+            double drawy = particle.y - particle.radius;
+            double drawrad = 2 * particle.radius;
+
+            // compensate for scale
+            drawx *= SCALE;
+            drawy *= SCALE;
+            drawrad *= SCALE;
+
+            // compensate for screen center
+            drawx += MainFrame.WIDTH / 2;
+            drawy += MainFrame.HEIGHT / 2;
+
+            // compensate for camera
+            drawx -= camera.x * SCALE;
+            drawy -= camera.y * SCALE;
+
+            switch (particle.type) {
+                case 0 -> g2d.setColor(Color.red);
+                case 1 -> g2d.setColor(Color.cyan);
+                case 2 -> g2d.setColor(Color.green);
+                case 3 -> g2d.setColor(Color.orange);
+                default -> System.out.println("big fuk");
+            }
+
+            g2d.fillOval((int)drawx, (int)drawy, (int)drawrad, (int)drawrad);
+        }
+    }
+
+    // draws the white refrence of a unit in the corner
     private void drawReference(Graphics2D g2d) {
         // coordinates relative to frame
-        int fromX = 20;
-        int fromY = MainFrame.HEIGHT - 50;
-        int toX = fromX + (int) SCALE;
-        int toY = fromY;
+        for (int i=0; i<10; i++) {
 
-        // draw the line
-        g2d.setColor(Color.white);
-        g2d.drawLine(fromX, fromY, toX, toY);
+            int bufferX = MainFrame.WIDTH / 96;
+            int bufferY = MainFrame.HEIGHT / 20;
+            int fromX = bufferX+ i * (int)SCALE;
+            int fromY = MainFrame.HEIGHT - bufferY;
+            int toX = fromX + (int)SCALE;
+            int toY = fromY;
+
+            // draw the lines
+            if (i % 2 == 0) g2d.setColor(new Color(255, 255, 255, 255));
+            else g2d.setColor(new Color(255, 255, 255, 128));
+
+            g2d.drawLine(fromX, fromY, toX, toY);
+        }
     }
 
     // the primary paint method called each frame
@@ -310,10 +359,7 @@ public class SimPanel extends JPanel implements Runnable {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        for (Particle particle : particles){
-            particle.draw(g2d, cameraPosX, cameraPosY);
-        }
-
+        drawParticles(g2d);
         drawBorder(g2d);
         drawReference(g2d);
 
@@ -329,8 +375,8 @@ public class SimPanel extends JPanel implements Runnable {
 
             particle.x = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
             particle.y = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
-            particle.vx = rand.nextDouble(-400.0, 400.0);
-            particle.vy = rand.nextDouble(-400.0, 400.0);
+            particle.vx = rand.nextDouble(-10.0, 10.0);
+            particle.vy = rand.nextDouble(-10.0, 10.0);
             particle.type = type;
             particle.changeMass(mass);
 
