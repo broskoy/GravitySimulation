@@ -20,15 +20,15 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulation features
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = false; // if particles should have gravity
+    final static boolean GRAVITY = true; // if particles should have gravity
     final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
-    final static int FPS = 60; // frames per second
-    final static double GRAVITYSTRENGTH = 1; // strength of gravity
+    final static int FPS = 120; // frames per second
+    final static double GRAVITYSTRENGTH = 100; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static double BARRIER = 60; // distance in units to the edges of the universe
+    final static double BARRIER = 50; // distance in units to the edges of the universe
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -145,35 +145,30 @@ public class SimPanel extends JPanel implements Runnable {
     // we calculate the velocity through the forces particle have on eachother
     private void updateGravity() {
         for (Particle first : particles) {
-            double finalForceX = 0;
-            double finalForceY = 0;
+            double totalForceX = 0;
+            double totalForceY = 0;
 
             for (Particle second : particles) {
                 if (first != second) {
-                    // the distance from the first particle to the other scaled
-                    double distanceX = second.x - first.x;
-                    double distanceY = second.y - first.y;
-                    double distance = calculateDistance(first, second);
-                    distance = Math.max(distance, 1);
+                    // the distance from the first particle to the other
+                    Vector distance = new Vector(second.x - first.x, second.y - first.y);
+                    double safeDistance = Math.max(distance.mag, 0.1);
                     
-                    if (GRAVITY) {
-                        // calculate the force felt by the first (the formula can be changed)
-                        double force;
-                        force = GRAVITYSTRENGTH * first.mass * second.mass / distance;
-                        force *= attraction[first.type][second.type];
-                        finalForceX += distanceX / distance * force;
-                        finalForceY += distanceY / distance * force;
-                    }
+                    // calculate the force felt by the first (the formula can be changed)
+                    double force = GRAVITYSTRENGTH * first.mass * second.mass / safeDistance;
+                    // force *= attraction[first.type][second.type];
+                    totalForceX += distance.x / safeDistance * force;
+                    totalForceY += distance.y / safeDistance * force;
                 }
             }
 
             // convert force into acceleration F = m * a
-            double acccelerationx = finalForceX / first.mass;
-            double acccelerationy = finalForceY / first.mass;
+            double accelerationx = totalForceX / first.mass;
+            double accelerationy = totalForceY / first.mass;
             
             // devide by fps because small time interval vf = vi + a * t
-            first.vx += acccelerationx / FPS;
-            first.vy += acccelerationy / FPS;   
+            first.vx += accelerationx / FPS;
+            first.vy += accelerationy / FPS;   
         } 
     }
 
@@ -185,14 +180,13 @@ public class SimPanel extends JPanel implements Runnable {
         }
     }
 
-    // returns the scaled distance between two particles
+    // returns the distance between two particles
     private double calculateDistance(Particle first, Particle second) {
         double distanceX = second.x - first.x;
         double distanceY = second.y - first.y;
         double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        double scaledDistance = distance; // final distance in units
 
-        return scaledDistance;
+        return distance;
     }
 
     // merge particles with combined mass and momentum vf = (m1*v1 + m2*v2) / (m1+m2)

@@ -7,8 +7,8 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame{
 
-    final static int WIDTH = 1280; // x
-    final static int HEIGHT = 720; // y
+    final static int WIDTH = 1920; // x
+    final static int HEIGHT = 1080; // y
     SimPanel simPanel;
     ToolPanel toolPanel;
     OptionPanel optionPanel;
@@ -26,7 +26,7 @@ public class MainFrame extends JFrame{
         // frame settings
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(WIDTH, HEIGHT);
-        this.setResizable(false);
+        this.setResizable(true);
         this.setTitle("Gravity Simulation");
         this.getContentPane().setBackground(Color.darkGray);
         this.setLayout(null);
@@ -60,7 +60,6 @@ public class MainFrame extends JFrame{
 // TODO: fix conservation of momentum in SimPanel.updateMerge()
 // TODO: there is a better way to calculate acceleration
 // TODO: make collision
-// TODO: test with higher resolotion (prbably make distance independent of pixels)
 // TODO: make interface for configurating variables
 // TODO: make an edit mode where you can add particles
 // TODO: add minimap in the corner
