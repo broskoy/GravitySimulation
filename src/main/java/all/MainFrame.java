@@ -7,8 +7,8 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame{
 
-    final static int WIDTH = 1000; // x
-    final static int HEIGHT = 600; // y
+    final static int WIDTH = 1920; // x
+    final static int HEIGHT = 1080; // y
     SimPanel simPanel;
     ToolPanel toolPanel;
     OptionPanel optionPanel;
@@ -20,8 +20,8 @@ public class MainFrame extends JFrame{
     public MainFrame() {
         // add frame components
         addSimPanel();
-        addToolPanel();
-        addOptionPanel();
+        // addToolPanel();
+        // addOptionPanel();
 
         // frame settings
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -33,7 +33,7 @@ public class MainFrame extends JFrame{
         this.setVisible(true);
 
         // add particles to simulate
-        SimPanel.create(20, 0, 4);
+        SimPanel.create(10, 0, 16);
     }    
 
     private void addSimPanel() {

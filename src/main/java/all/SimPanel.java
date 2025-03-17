@@ -23,11 +23,13 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulatin parameters
     final static int FPS = 60;
-    final static double GRAVITY = 1; // strength of gravity
+    final static double GRAVITYSTRENGTH = 1; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static boolean MERGE = true; // if particles should merge
+    final static boolean MERGE = false; // if particles should merge (exclusive with collision)
+    final static boolean GRAVITY = true; // if particles should have gravity
+    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
     final static double SCALE = 40; // pixels in a meter
-    final static double BARRIER = 1000; // distance in pixels to the edges of the universe
+    final static double BARRIER = 400; // distance in pixels to the edges of the universe
 
     // position parameters
     final static int borderX = 20;
@@ -111,47 +113,47 @@ public class SimPanel extends JPanel implements Runnable {
 
     // this method controls the mechanics of each frame
     public void updatePhysics() {
-        ArrayList<Particle> particlesToAdd = new ArrayList<>();
+        
+        if (MERGE) updateMerge();
 
-        // we calculate the velocity through the forces particle have on eachother
+        if (COLLISION) updateCollisions();
+
+        if (GRAVITY) updateGravity();
+
+        updateDeceleration();
+
+        updateBarrierCollisons();
+
+        updatePositions();
+    }
+
+    private void updateCollisions() {
+
+    }
+
+    // this method claculates the attraction between all particles
+    // it must be two way scince a pulls be while b also pulls a
+    // we calculate the velocity through the forces particle have on eachother
+    private void updateGravity() {
         for (Particle first : particles) {
             double finalForceX = 0;
             double finalForceY = 0;
 
             for (Particle second : particles) {
                 if (first != second) {
-                    // the distance from the first particle to the other in pixels 
+                    // the distance from the first particle to the other scaled
                     double distanceX = second.x - first.x;
                     double distanceY = second.y - first.y;
-                    double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-                    distance = Math.max(distance, 1); // avoiding division by 0
-                    double scaledDist = distance / SCALE; // final distance in meters
-
-                    // calculate the force felt by the first (the formula can be changed)
-                    double force;
-                    force = GRAVITY * first.mass * second.mass / scaledDist;
-                    force *= attraction[first.type][second.type];
-                    finalForceX += distanceX / scaledDist * force;
-                    finalForceY += distanceY / scaledDist * force;
-
-                    // merge with combined mass and momentum vf = (m1*v1 + m2*v2) / (m1+m2)
-                    if (MERGE && !(first.marked || second.marked) && (distance < first.radius + second.radius)){
-                        Particle result = new Particle();
-
-                        result.vx = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
-                        result.vy = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
-                        result.changeMass(first.mass + second.mass);
-                        result.x = (first.x + second.x) / 2;
-                        result.y = (first.y + second.y) / 2;
-                        result.type = first.type; // TODO: think abot this
-
-                        particlesToAdd.add(result);
-
-                        first.marked = true;
-                        second.marked = true;
-                    }
-
+                    double distance = calculateDistance(first, second);
                     
+                    if (GRAVITY) {
+                        // calculate the force felt by the first (the formula can be changed)
+                        double force;
+                        force = GRAVITYSTRENGTH * first.mass * second.mass / distance;
+                        force *= attraction[first.type][second.type];
+                        finalForceX += distanceX / distance * force;
+                        finalForceY += distanceY / distance * force;
+                    }
                 }
             }
 
@@ -161,39 +163,94 @@ public class SimPanel extends JPanel implements Runnable {
             
             // devide by fps because small time interval vf = vi + a * t
             first.vx += acccelerationx / FPS;
-            first.vy += acccelerationy / FPS;
-
-            // decelerate particle to compensate for errors
-            first.vx *= DECELERATOR;
-            first.vy *= DECELERATOR;
-
-            // bounce off walls
-            if (first.x < - BARRIER + first.radius) {
-                first.vx = Math.abs(first.vx);
-            }
-            if (BARRIER - first.radius < first.x) {
-                first.vx = -Math.abs(first.vx);
-            }
-            if (first.y < - BARRIER + first.radius) {
-                first.vy = Math.abs(first.vy);
-            }
-            if (BARRIER - first.radius < first.y) {
-                first.vy = -Math.abs(first.vy);
-            }
+            first.vy += acccelerationy / FPS;   
         } 
+    }
 
-        // we calculate position after a frame xf = xi + v * t
+    // decelerate particle to compensate for approximation errors
+    private void updateDeceleration() {
+        for (Particle particle : particles){
+            particle.vx *= DECELERATOR;
+            particle.vy *= DECELERATOR; 
+        }
+    }
+
+    // returns the scaled distance between two particles
+    private double calculateDistance(Particle first, Particle second) {
+        double distanceX = second.x - first.x;
+        double distanceY = second.y - first.y;
+        double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        distance = Math.max(distance, 1); // avoiding division by 0
+        double scaledDistance = distance / SCALE; // final distance in meters
+
+        return scaledDistance;
+    }
+
+    // merge particles with combined mass and momentum vf = (m1*v1 + m2*v2) / (m1+m2)
+    private void updateMerge() {
+        ArrayList<Particle> particlesToAdd = new ArrayList<>();
+
+        for (Particle first : particles) {
+            for (Particle second : particles) {
+                
+                double distance = calculateDistance(first, second);
+
+                if (!(first.marked || second.marked) && (distance < first.radius + second.radius)){
+                    particlesToAdd.add(mergeParticles(first, second));
+                }
+            }
+        }
+
+        // move them from one to the other
+        for (Particle particle : particlesToAdd)
+            particles.add(particle);
+
+        deleteMarked();
+    }
+
+    private Particle mergeParticles(Particle first, Particle second) {
+        Particle result = new Particle();
+
+        result.vx = (first.mass * first.vx + second.mass * second.vx) / (first.mass + second.mass);
+        result.vy = (first.mass * first.vy + second.mass * second.vy) / (first.mass + second.mass);
+        result.changeMass(first.mass + second.mass);
+        result.x = (first.x + second.x) / 2;
+        result.y = (first.y + second.y) / 2;
+        result.type = first.type; // TODO: think abot this
+
+        first.marked = true;
+        second.marked = true;
+
+        return result;
+    }
+
+    // we calculate position after a frame xf = xi + v * t
+    private void updatePositions() {
         for (Particle particle : particles) {
             particle.x += particle.vx / FPS;
             particle.y += particle.vy / FPS;
         }
+    }
 
-        // move them from one to the other
-        for (Particle particle : particlesToAdd){
-            particles.add(particle);
+    // change the velocities to bounce off barrier
+    private void updateBarrierCollisons() {
+        for (Particle particle : particles){
+            // left side
+            if (particle.x - particle.radius < - BARRIER )
+                particle.vx = Math.abs(particle.vx);
+            
+            // right side
+            if (BARRIER  < particle.x + particle.radius)
+                particle.vx = -Math.abs(particle.vx);
+
+            // bottom side
+            if (particle.y - particle.radius < - BARRIER )
+                particle.vy = Math.abs(particle.vy);
+
+            // top side
+            if (BARRIER < particle.y + particle.radius)
+                particle.vy = -Math.abs(particle.vy);
         }
-
-        deleteMarked();
     }
 
     // delete all marked
@@ -232,6 +289,7 @@ public class SimPanel extends JPanel implements Runnable {
     }
 
     // the primary paint method called each frame
+    @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
@@ -253,8 +311,10 @@ public class SimPanel extends JPanel implements Runnable {
         for (int i=0; i<number; i++){
             Particle particle = new Particle();
 
-            particle.x = rand.nextInt((int)BARRIER) - BARRIER / 2;
-            particle.y = rand.nextInt((int)BARRIER) - BARRIER / 2;
+            particle.x = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
+            particle.y = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
+            particle.vx = rand.nextDouble(-400.0, 400.0);
+            particle.vy = rand.nextDouble(-400.0, 400.0);
             particle.type = type;
             particle.changeMass(mass);
 

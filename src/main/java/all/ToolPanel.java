@@ -75,10 +75,6 @@ public class ToolPanel extends JPanel implements ActionListener{
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == button1) {
-            
-        }
-    }
+    public void actionPerformed(ActionEvent e) {}
 
 }
