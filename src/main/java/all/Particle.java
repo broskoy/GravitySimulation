@@ -2,7 +2,6 @@ package all;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.lang.Math;
 
 public class Particle {
     int type;
@@ -26,20 +25,20 @@ public class Particle {
     }
 
     public void draw(Graphics2D g2d, int cameraPosX, int cameraPosY) {
-        int drawx = (int)(x - radius);
-        int drawy = (int)(y - radius);
-        int drawrad = (int)(2*radius);
+        int drawx = (int)(x - radius * SimPanel.SCALE);
+        int drawy = (int)(y - radius * SimPanel.SCALE);
+        int drawrad = (int)(2*radius * SimPanel.SCALE);
 
         // compensate for camera
         drawx -= cameraPosX;
         drawy -= cameraPosY;
 
         switch (type) {
-            case 0: g2d.setColor(Color.red); break;
-            case 1: g2d.setColor(Color.cyan); break;
-            case 2: g2d.setColor(Color.green); break;
-            case 3: g2d.setColor(Color.orange); break;
-            default: System.out.println("big fuk"); break;
+            case 0 -> g2d.setColor(Color.red);
+            case 1 -> g2d.setColor(Color.cyan);
+            case 2 -> g2d.setColor(Color.green);
+            case 3 -> g2d.setColor(Color.orange);
+            default -> System.out.println("big fuk");
         }
         g2d.fillOval(drawx, drawy, drawrad, drawrad);
     }

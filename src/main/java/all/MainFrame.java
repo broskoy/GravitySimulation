@@ -66,4 +66,3 @@ public class MainFrame extends JFrame{
 // TODO: make an edit mode where you can add particles
 // TODO: add minimap in the corner
 // TODO: center SimPanel in Frame (with layout?)
-// TODO: separate update into smaller bits

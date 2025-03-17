@@ -28,12 +28,8 @@ public class SimPanel extends JPanel implements Runnable {
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
     final static boolean GRAVITY = true; // if particles should have gravity
     final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
-    final static double SCALE = 40; // pixels in a meter
+    public final static double SCALE = 10; // pixels in a unit
     final static double BARRIER = 400; // distance in pixels to the edges of the universe
-
-    // position parameters
-    final static int borderX = 20;
-    final static int borderY = 20;
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -127,11 +123,25 @@ public class SimPanel extends JPanel implements Runnable {
         updatePositions();
     }
 
+    // this method calculates the resulting collision velocities between all particles
+    // it must be one way since a call of collideParticles() computes for both
     private void updateCollisions() {
+        for (int i = 0; i < particles.size() - 1; i++) {
+            Particle first = particles.get(i);
+            for (int j = i + 1; j < particles.size(); j++) {
+                Particle second = particles.get(j);
+
+                if (touching(first, second))
+                    collideParticles(first, second);
+            }
+        }
+    }
+
+    private void collideParticles(Particle first, Particle second) {
 
     }
 
-    // this method claculates the attraction between all particles
+    // this method calculates the attraction between all particles
     // it must be two way scince a pulls be while b also pulls a
     // we calculate the velocity through the forces particle have on eachother
     private void updateGravity() {
@@ -145,6 +155,7 @@ public class SimPanel extends JPanel implements Runnable {
                     double distanceX = second.x - first.x;
                     double distanceY = second.y - first.y;
                     double distance = calculateDistance(first, second);
+                    distance = Math.max(distance, 1);
                     
                     if (GRAVITY) {
                         // calculate the force felt by the first (the formula can be changed)
@@ -180,8 +191,7 @@ public class SimPanel extends JPanel implements Runnable {
         double distanceX = second.x - first.x;
         double distanceY = second.y - first.y;
         double distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        distance = Math.max(distance, 1); // avoiding division by 0
-        double scaledDistance = distance / SCALE; // final distance in meters
+        double scaledDistance = distance / SCALE; // final distance in units
 
         return scaledDistance;
     }
@@ -251,6 +261,12 @@ public class SimPanel extends JPanel implements Runnable {
             if (BARRIER < particle.y + particle.radius)
                 particle.vy = -Math.abs(particle.vy);
         }
+    }
+
+    private boolean touching(Particle first, Particle second) {
+        double distance = calculateDistance(first, second);
+
+        return distance < first.radius + second.radius;
     }
 
     // delete all marked
