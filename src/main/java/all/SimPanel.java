@@ -8,7 +8,7 @@ import java.util.Random;
 
 import javax.swing.JPanel;
 
-public class SimPanel extends JPanel implements Runnable {  
+public class SimPanel extends JPanel implements Runnable {
 
     // allocate a thread to run 
     Thread gameThread;
@@ -45,7 +45,7 @@ public class SimPanel extends JPanel implements Runnable {
         //panel settings
         this.setSize(MainFrame.WIDTH, MainFrame.HEIGHT);
         this.setBackground(new Color(20, 0, 20));
-        this.setLocation(borderX, borderY);
+        this.setLocation(0, 0);
         this.addKeyListener(keyHandler);
         this.setLayout(null);
         this.setFocusable(true);
@@ -221,8 +221,8 @@ public class SimPanel extends JPanel implements Runnable {
     // draws the white refrence of a meter in the corner
     private void drawReference(Graphics2D g2d) {
         // coordinates relative to frame
-        int fromX = borderX + 20;
-        int fromY = borderY + MainFrame.HEIGHT - 50;
+        int fromX = 20;
+        int fromY = MainFrame.HEIGHT - 50;
         int toX = fromX + (int) SCALE;
         int toY = fromY;
 
