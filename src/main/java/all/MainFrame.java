@@ -59,7 +59,8 @@ public class MainFrame extends JFrame{
 
 // TODO: fix conservation of momentum in SimPanel.update()
 // TODO: there is a better way to calculate acceleration
-// TODO: make optional collisions
+// TODO: make collision
+// TODO: pairing by iterating for(j=i+1;j<n;j++) to avoid double checking
 // TODO: test with higher resolotion (prbably make distance independent of pixels)
 // TODO: make interface for configurating variables
 // TODO: make an edit mode where you can add particles
