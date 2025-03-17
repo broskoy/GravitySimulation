@@ -33,7 +33,7 @@ public class MainFrame extends JFrame{
         this.setVisible(true);
 
         // add particles to simulate
-        SimPanel.create(10, 0, 1);
+        SimPanel.create(2, 0, 64);
     }    
 
     private void addSimPanel() {
@@ -59,8 +59,7 @@ public class MainFrame extends JFrame{
 
 // TODO: fix conservation of momentum in SimPanel.updateMerge()
 // TODO: there is a better way to calculate acceleration
-// TODO: make collision
-// TODO: make interface for configurating variables
+// TODO: make interface for configuring variables
 // TODO: make an edit mode where you can add particles
 // TODO: add minimap in the corner
 // TODO: center SimPanel in Frame (with layout?)

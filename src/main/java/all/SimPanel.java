@@ -20,15 +20,16 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulation features
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = true; // if particles should have gravity
-    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
+    final static boolean GRAVITY = false; // if particles should have gravity
+    final static boolean COLLISION = true; // if particles should collide (exclusive with merge)
+    final static boolean DECELERATE = false;
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
-    final static int FPS = 120; // frames per second
+    final static int FPS = 60; // frames per second
     final static double GRAVITYSTRENGTH = 100; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static double BARRIER = 50; // distance in units to the edges of the universe
+    final static double BARRIER = 20; // distance in units to the edges of the universe
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -115,7 +116,7 @@ public class SimPanel extends JPanel implements Runnable {
 
         if (GRAVITY) updateGravity();
 
-        updateDeceleration();
+        if (DECELERATE) updateDeceleration();
 
         updateBarrierCollisons();
 
@@ -130,18 +131,50 @@ public class SimPanel extends JPanel implements Runnable {
             for (int j = i + 1; j < particles.size(); j++) {
                 Particle second = particles.get(j);
 
-                if (touching(first, second))
+                if (touching(first, second)) {
+                    fixOverlap(first, second);
                     collideParticles(first, second);
+                }
             }
         }
     }
 
-    private void collideParticles(Particle first, Particle second) {
+    private void fixOverlap(Particle first, Particle second) {
+        double distance = calculateDistance(first, second);
+        double overlap = first.radius + second.radius - distance; // overlap is positive
+        double shiftX = (second.x - first.x) * overlap / distance;
+        double shiftY = (second.y - first.y) * overlap / distance;
 
+        shiftX /= 2;
+        shiftY /= 2;
+
+        first.x -= shiftX;
+        first.y -= shiftY;
+
+        second.x += shiftX;
+        second.y += shiftY;
+    }
+
+    private void collideParticles(Particle first, Particle second) {
+        double distance = calculateDistance(first, second);
+        double velocityRatio = ((second.vx - first.vx)*(second.x - first.x) + (second.vy - first.vy)*(second.y - first.y)) / (distance * distance);
+
+        // calculate velocity of first
+        double massRatio1 = 2 * second.mass / (first.mass + second.mass);
+        first.vx += massRatio1 * velocityRatio * (second.x - first.x);
+        first.vy += massRatio1 * velocityRatio * (second.y - first.y);
+
+        // calculate velocity of second
+        double massRatio2 = 2 * first.mass / (first.mass + second.mass);
+        second.vx = massRatio2 * velocityRatio * (first.x - second.x);
+        second.vy = massRatio2 * velocityRatio * (first.y - second.y);
+
+        System.out.println(velocityRatio);
+        System.out.println(velocityRatio);
     }
 
     // this method calculates the attraction between all particles
-    // it must be two way scince a pulls be while b also pulls a
+    // it must be two way scince A pulls B while B also pulls A
     // we calculate the velocity through the forces particle have on eachother
     private void updateGravity() {
         for (Particle first : particles) {
