@@ -26,7 +26,7 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
-    final static int FPS = 60; // frames per second
+    final static int FPS = 200; // frames per second
     final static double GRAVITYSTRENGTH = 100; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
     final static double BARRIER = 20; // distance in units to the edges of the universe
@@ -49,6 +49,24 @@ public class SimPanel extends JPanel implements Runnable {
         this.setFocusable(true);
         this.setDoubleBuffered(true);
         this.setVisible(true);
+
+        Particle particle1 = new Particle();
+        particle1.x = -12;
+        particle1.y = 12;
+        particle1.vx = 8;
+        particle1.vy = -8;
+        particle1.changeMass(64);
+
+
+        Particle particle2 = new Particle();
+        particle2.x = 12;
+        particle2.y = -12;
+        particle2.vx = -4;
+        particle2.vy = 4;
+        particle2.changeMass(64);
+
+        particles.add(particle1);
+        particles.add(particle2);
     }
 
     public void startSimulationThread() {
@@ -132,8 +150,11 @@ public class SimPanel extends JPanel implements Runnable {
                 Particle second = particles.get(j);
 
                 if (touching(first, second)) {
+                    printTotalMomentum();
                     fixOverlap(first, second);
                     collideParticles(first, second);
+                    printTotalMomentum();
+                    System.out.println("\n");
                 }
             }
         }
@@ -157,22 +178,45 @@ public class SimPanel extends JPanel implements Runnable {
 
     private void collideParticles(Particle first, Particle second) {
         double distance = calculateDistance(first, second);
-        double velocityRatio = ((second.vx - first.vx)*(second.x - first.x) + (second.vy - first.vy)*(second.y - first.y)) / (distance * distance);
+        double dx = second.x - first.x;
+        double dy = second.y - first.y;
+        double dvx = second.vx - first.vx;
+        double dvy = second.vy - first.vy;
+        double velocityRatio = (dvx*dx + dvy*dy) / (distance * distance);
 
         // calculate velocity of first
         double massRatio1 = 2 * second.mass / (first.mass + second.mass);
-        first.vx += massRatio1 * velocityRatio * (second.x - first.x);
-        first.vy += massRatio1 * velocityRatio * (second.y - first.y);
+        first.vx += massRatio1 * velocityRatio * dx;
+        first.vy += massRatio1 * velocityRatio * dy;
 
         // calculate velocity of second
         double massRatio2 = 2 * first.mass / (first.mass + second.mass);
-        second.vx = massRatio2 * velocityRatio * (first.x - second.x);
-        second.vy = massRatio2 * velocityRatio * (first.y - second.y);
-
-        System.out.println(velocityRatio);
-        System.out.println(velocityRatio);
+        second.vx += massRatio2 * velocityRatio * -dx;
+        second.vy += massRatio2 * velocityRatio * -dy;
     }
 
+    private void printTotalKineticEnergy() {
+        double sum = 0.0;
+
+        for (Particle particle : particles) {
+            double velocityLength = Math.sqrt(particle.vx * particle.vx) + (particle.vy * particle.vy);
+            sum += 0.5 * particle.mass * velocityLength * velocityLength; // 1/2 * m * |v|^2
+        }
+
+        System.out.println(sum);
+    }
+
+    private void printTotalMomentum() {
+        double momentumX = 0.0;
+        double momentumY = 0.0;
+
+        for (Particle particle : particles) {
+            momentumX += particle.mass * particle.vx;
+            momentumY += particle.mass * particle.vy;
+        }
+
+        System.out.println(momentumX + " " + momentumY);
+    }
     // this method calculates the attraction between all particles
     // it must be two way scince A pulls B while B also pulls A
     // we calculate the velocity through the forces particle have on eachother
@@ -244,6 +288,7 @@ public class SimPanel extends JPanel implements Runnable {
         deleteMarked();
     }
 
+    // marges two particle by preserving mass and momentum
     private Particle mergeParticles(Particle first, Particle second) {
         Particle result = new Particle();
 

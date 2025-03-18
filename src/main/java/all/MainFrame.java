@@ -7,8 +7,8 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame{
 
-    final static int WIDTH = 1920; // x
-    final static int HEIGHT = 1080; // y
+    final static int WIDTH = 720; // x
+    final static int HEIGHT = 720; // y
     SimPanel simPanel;
     ToolPanel toolPanel;
     OptionPanel optionPanel;
@@ -31,9 +31,6 @@ public class MainFrame extends JFrame{
         this.getContentPane().setBackground(Color.darkGray);
         this.setLayout(null);
         this.setVisible(true);
-
-        // add particles to simulate
-        SimPanel.create(2, 0, 64);
     }    
 
     private void addSimPanel() {
