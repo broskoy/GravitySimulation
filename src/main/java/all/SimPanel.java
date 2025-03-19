@@ -26,10 +26,10 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
-    final static int FPS = 200; // frames per second
+    final static int FPS = 60; // frames per second
     final static double GRAVITYSTRENGTH = 100; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static double BARRIER = 20; // distance in units to the edges of the universe
+    final static double BARRIER = 40; // distance in units to the edges of the universe
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -51,18 +51,18 @@ public class SimPanel extends JPanel implements Runnable {
         this.setVisible(true);
 
         Particle particle1 = new Particle();
-        particle1.x = -12;
-        particle1.y = 12;
-        particle1.vx = 8;
-        particle1.vy = -8;
+        particle1.x = -10;
+        particle1.y = -2;
+        particle1.vx = 10;
+        particle1.vy = 0;
         particle1.changeMass(64);
 
 
         Particle particle2 = new Particle();
-        particle2.x = 12;
-        particle2.y = -12;
-        particle2.vx = -4;
-        particle2.vy = 4;
+        particle2.x = 0;
+        particle2.y = 0;
+        particle2.vx = 5;
+        particle2.vy = 0;
         particle2.changeMass(64);
 
         particles.add(particle1);
@@ -150,10 +150,10 @@ public class SimPanel extends JPanel implements Runnable {
                 Particle second = particles.get(j);
 
                 if (touching(first, second)) {
-                    printTotalMomentum();
-                    fixOverlap(first, second);
+                    printTotalKineticEnergy();
+                    // fixOverlap(first, second);
                     collideParticles(first, second);
-                    printTotalMomentum();
+                    printTotalKineticEnergy();
                     System.out.println("\n");
                 }
             }
@@ -177,12 +177,11 @@ public class SimPanel extends JPanel implements Runnable {
     }
 
     private void collideParticles(Particle first, Particle second) {
-        double distance = calculateDistance(first, second);
         double dx = second.x - first.x;
         double dy = second.y - first.y;
         double dvx = second.vx - first.vx;
         double dvy = second.vy - first.vy;
-        double velocityRatio = (dvx*dx + dvy*dy) / (distance * distance);
+        double velocityRatio = (dvx * dx + dvy * dy) / (dx * dx + dy * dy); // vr = vel * pos / dist^2
 
         // calculate velocity of first
         double massRatio1 = 2 * second.mass / (first.mass + second.mass);
@@ -199,8 +198,8 @@ public class SimPanel extends JPanel implements Runnable {
         double sum = 0.0;
 
         for (Particle particle : particles) {
-            double velocityLength = Math.sqrt(particle.vx * particle.vx) + (particle.vy * particle.vy);
-            sum += 0.5 * particle.mass * velocityLength * velocityLength; // 1/2 * m * |v|^2
+            double velocitySquared = (particle.vx * particle.vx) + (particle.vy * particle.vy);
+            sum += 0.5 * particle.mass * velocitySquared; // 1/2 * m * |v|^2
         }
 
         System.out.println(sum);
@@ -217,6 +216,7 @@ public class SimPanel extends JPanel implements Runnable {
 
         System.out.println(momentumX + " " + momentumY);
     }
+    
     // this method calculates the attraction between all particles
     // it must be two way scince A pulls B while B also pulls A
     // we calculate the velocity through the forces particle have on eachother
@@ -334,6 +334,7 @@ public class SimPanel extends JPanel implements Runnable {
         }
     }
 
+    // return true if particles are touching
     private boolean touching(Particle first, Particle second) {
         double distance = calculateDistance(first, second);
 
