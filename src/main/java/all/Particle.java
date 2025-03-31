@@ -17,7 +17,7 @@ public class Particle {
         this.vx = 0;
         this.vy = 0;
         this.mass = 1;
-        this.radius = Math.sqrt(mass);
+        this.radius = 0.5;
         this.marked = false;
     }
 
@@ -37,7 +37,7 @@ public class Particle {
 
     public void changeMass(double newMass) {
         mass = newMass;
-        radius = Math.sqrt(mass) / 2; // divided by 2 so the diameter is represantive of the mass (formula can be adjusted to preference)
+        radius = Math.sqrt(Math.abs(mass)) / 2; // divided by 2 so the diameter is represantive of the mass (formula can be adjusted to preference)
     }
 
     public void mark() {

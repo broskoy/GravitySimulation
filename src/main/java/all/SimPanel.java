@@ -20,24 +20,25 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulation features
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = false; // if particles should have gravity
-    final static boolean COLLISION = true; // if particles should collide (exclusive with merge)
-    final static boolean DECELERATE = false;
+    final static boolean GRAVITY = true; // if particles should have gravity
+    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
+    final static boolean DECELERATE = false; // slow down particle speed to compensate for errors
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
-    final static int FPS = 60; // frames per second
-    final static double GRAVITYSTRENGTH = 100; // strength of gravity
+    final static int FPS = 120; // frames per second
+    final static double GRAVITYSTRENGTH = 30; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
-    final static double BARRIER = 40; // distance in units to the edges of the universe
+    final static double BARRIER = 100; // distance in units to the edges of the universe
+    final static double RANDOMVELOCITY = 0;
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
 
-    Double attraction[][] = {{1.0, 1.0, 0.0, -1.0}, 
-                             {1.0, 0.0, -1.0, 0.0},
-                             {0.0, -1.0, 0.0, 1.0},
-                             {-1.0, 0.0, 1.0, 0.0}};
+    // Double attraction[][] = {{1.0, 1.0, 0.0, -1.0}, 
+    //                          {1.0, 0.0, -1.0, 0.0},
+    //                          {0.0, -1.0, 0.0, 1.0},
+    //                          {-1.0, 0.0, 1.0, 0.0}};
 
     public SimPanel() {
         //panel settings
@@ -50,6 +51,14 @@ public class SimPanel extends JPanel implements Runnable {
         this.setDoubleBuffered(true);
         this.setVisible(true);
 
+        create(1, 0, 10);
+        create(10, 1, 1);
+        //create(1, 2, 16);
+        //create(1, 3, 16);
+    }
+
+    // used to test fine details
+    private void addTestParticles() {
         Particle particle1 = new Particle();
         particle1.x = -10;
         particle1.y = -2;
@@ -150,10 +159,10 @@ public class SimPanel extends JPanel implements Runnable {
                 Particle second = particles.get(j);
 
                 if (touching(first, second)) {
-                    printTotalKineticEnergy();
-                    // fixOverlap(first, second);
+                    // printTotalKineticEnergy();
+                    fixOverlap(first, second);
                     collideParticles(first, second);
-                    printTotalKineticEnergy();
+                    // printTotalKineticEnergy();
                     System.out.println("\n");
                 }
             }
@@ -440,16 +449,20 @@ public class SimPanel extends JPanel implements Runnable {
     }
 
     // creates a specified amount of particles with random positions
-    public static void create(int number, int type, int mass){
-        Random rand = new Random();
+    public static void create(int number, int type, double mass){
+        Random random = new Random();
 
         for (int i=0; i<number; i++){
             Particle particle = new Particle();
 
-            particle.x = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
-            particle.y = rand.nextDouble(-BARRIER / 2, BARRIER / 2);
-            particle.vx = rand.nextDouble(-10.0, 10.0);
-            particle.vy = rand.nextDouble(-10.0, 10.0);
+            particle.x = random.nextDouble(-BARRIER / 2, BARRIER / 2);
+            particle.y = random.nextDouble(-BARRIER / 2, BARRIER / 2);
+
+            // give particles random velocity bounded by RANDOMVELOCITY, must not be 0
+            double randomPositiveVelocity = Math.max(0.0001, RANDOMVELOCITY);
+            particle.vx = random.nextDouble(-randomPositiveVelocity, randomPositiveVelocity);
+            particle.vy = random.nextDouble(-randomPositiveVelocity, randomPositiveVelocity);
+            
             particle.type = type;
             particle.changeMass(mass);
 
