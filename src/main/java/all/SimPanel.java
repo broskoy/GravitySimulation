@@ -237,13 +237,14 @@ public class SimPanel extends JPanel implements Runnable {
         Vector distance = new Vector(second.x - first.x, second.y - first.y);
         double distanceSquared = Math.max(distance.magSquared(), 0.1);
 
-        // calculate force (squared comes from merging the next step)
-        double force = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared;
+        // calculate force (squared comes from force formula and projection)
+        double forceX = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared * distance.x;
+        double forceY = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared * distance.y;
         // force *= attraction[first.type][second.type];
 
-        // split onto the each axis and return
-        Vector splitForce = new Vector(distance.x * force, distance.y * force);
-        return splitForce;
+        // combine and return
+        Vector force = new Vector(forceX, forceY);
+        return force;
     }
     // this method calculates the attraction between all particles
     // it must be two way scince A pulls B while B also pulls A
