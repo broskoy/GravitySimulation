@@ -20,8 +20,8 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulation features
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = true; // if particles should have gravity
-    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
+    final static boolean GRAVITY = false; // if particles should have gravity
+    final static boolean COLLISION = true; // if particles should collide (exclusive with merge)
     final static boolean DECELERATE = false; // slow down particle speed to compensate for errors
 
     // simulatin parameters
@@ -30,10 +30,15 @@ public class SimPanel extends JPanel implements Runnable {
     final static double GRAVITYSTRENGTH = 30; // strength of gravity
     final static double DECELERATOR = 0.9999; // compensates for errors
     final static double BARRIER = 100; // distance in units to the edges of the universe
-    final static double RANDOMVELOCITY = 0;
+    final static double RANDOMVELOCITY = 10;
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
+
+    // matrix of chunks
+    private static final double CHUNKSIZE = 10;
+    private static final int numberOfChunks = (int)(2 * BARRIER / CHUNKSIZE) + 1;
+    public static ArrayList<Particle>[][] chunkGrid = new ArrayList[numberOfChunks][numberOfChunks];
 
     // Double attraction[][] = {{1.0, 1.0, 0.0, -1.0}, 
     //                          {1.0, 0.0, -1.0, 0.0},
@@ -51,8 +56,8 @@ public class SimPanel extends JPanel implements Runnable {
         this.setDoubleBuffered(true);
         this.setVisible(true);
 
-        create(1, 0, 10);
-        create(10, 1, 1);
+        create(1000, 0, 1);
+        //create(10, 1, 1);
         //create(1, 2, 16);
         //create(1, 3, 16);
     }
@@ -130,8 +135,6 @@ public class SimPanel extends JPanel implements Runnable {
 
         if (keyHandler.rightPressed)
             camera.x += camera.speed;
-
-        // System.out.println(keyHandler.upPressed + " " + keyHandler.downPressed+ " " + keyHandler.leftPressed+ " " + keyHandler.rightPressed);
     }
 
     // this method controls the mechanics of each frame
@@ -314,11 +317,20 @@ public class SimPanel extends JPanel implements Runnable {
         return result;
     }
 
-    // we calculate position after a frame xf = xi + v * t
+    
     private void updatePositions() {
         for (Particle particle : particles) {
+            // remove from current chunk
+            // chunkGrid[particle.chunkX][particle.chunkY].remove(particle);
+
+            // we calculate position after a frame xf = xi + v * t
             particle.x += particle.vx / FPS;
             particle.y += particle.vy / FPS;
+
+            // add to a new chunk
+            // particle.chunkX = (int)(particle.x / CHUNKSIZE);
+            // particle.chunkY = (int)(particle.y / CHUNKSIZE);
+            // chunkGrid[particle.chunkX][particle.chunkY].add(particle);
         }
     }
 

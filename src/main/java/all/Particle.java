@@ -8,6 +8,8 @@ public class Particle {
     double vy;
     double mass;
     double radius;
+    int chunkX;
+    int chunkY;
     boolean marked;
 
     public Particle(){
@@ -18,6 +20,8 @@ public class Particle {
         this.vy = 0;
         this.mass = 1;
         this.radius = 0.5;
+        this.chunkX = 0;
+        this.chunkY = 0;
         this.marked = false;
     }
 
@@ -38,6 +42,11 @@ public class Particle {
     public void changeMass(double newMass) {
         mass = newMass;
         radius = Math.sqrt(Math.abs(mass)) / 2; // divided by 2 so the diameter is represantive of the mass (formula can be adjusted to preference)
+    }
+
+    public void changeChunk(int newX, int newY) {
+        chunkX = newX;
+        chunkY = newY;
     }
 
     public void mark() {
