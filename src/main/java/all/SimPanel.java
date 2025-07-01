@@ -20,8 +20,8 @@ public class SimPanel extends JPanel implements Runnable {
 
     // simulation features
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
-    final static boolean GRAVITY = false; // if particles should have gravity
-    final static boolean COLLISION = true; // if particles should collide (exclusive with merge)
+    final static boolean GRAVITY = true; // if particles should have gravity
+    final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
     final static boolean DECELERATE = false; // slow down particle speed to compensate for errors
 
     // simulatin parameters
@@ -56,13 +56,14 @@ public class SimPanel extends JPanel implements Runnable {
         this.setDoubleBuffered(true);
         this.setVisible(true);
 
-        create(1000, 0, 1);
+        create(100, 0, 1);
         //create(10, 1, 1);
         //create(1, 2, 16);
         //create(1, 3, 16);
     }
 
     // used to test fine details
+    @SuppressWarnings("unused")
     private void addTestParticles() {
         Particle particle1 = new Particle();
         particle1.x = -10;
@@ -206,6 +207,7 @@ public class SimPanel extends JPanel implements Runnable {
         second.vy += massRatio2 * velocityRatio * -dy;
     }
 
+    @SuppressWarnings("unused")
     private void printTotalKineticEnergy() {
         double sum = 0.0;
 
@@ -217,6 +219,7 @@ public class SimPanel extends JPanel implements Runnable {
         System.out.println(sum);
     }
 
+    @SuppressWarnings("unused")
     private void printTotalMomentum() {
         double momentumX = 0.0;
         double momentumY = 0.0;
@@ -229,35 +232,42 @@ public class SimPanel extends JPanel implements Runnable {
         System.out.println(momentumX + " " + momentumY);
     }
     
+    private Vector newtonianForce(Particle first, Particle second) {
+        // the distance betweent the particles
+        Vector distance = new Vector(second.x - first.x, second.y - first.y);
+        double distanceSquared = Math.max(distance.magSquared(), 0.1);
+
+        // calculate force (squared comes from merging the next step)
+        double force = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared;
+        // force *= attraction[first.type][second.type];
+
+        // split onto the each axis and return
+        Vector splitForce = new Vector(distance.x * force, distance.y * force);
+        return splitForce;
+    }
     // this method calculates the attraction between all particles
     // it must be two way scince A pulls B while B also pulls A
     // we calculate the velocity through the forces particle have on eachother
     private void updateGravity() {
         for (Particle first : particles) {
-            double totalForceX = 0;
-            double totalForceY = 0;
+
+            Vector totalForce = new Vector(0, 0);
 
             for (Particle second : particles) {
                 if (first != second) {
-                    // the distance from the first particle to the other
-                    Vector distance = new Vector(second.x - first.x, second.y - first.y);
-                    double safeDistance = Math.max(distance.mag, 0.1);
                     
-                    // calculate the force felt by the first (the formula can be changed)
-                    double force = GRAVITYSTRENGTH * first.mass * second.mass / safeDistance;
-                    // force *= attraction[first.type][second.type];
-                    totalForceX += distance.x / safeDistance * force;
-                    totalForceY += distance.y / safeDistance * force;
+                    totalForce.sum(newtonianForce(first, second));
                 }
             }
 
             // convert force into acceleration F = m * a
-            double accelerationx = totalForceX / first.mass;
-            double accelerationy = totalForceY / first.mass;
+            Vector acceleration = new Vector(0, 0);
+            acceleration.x = totalForce.x / first.mass;
+            acceleration.y = totalForce.y / first.mass;
             
             // devide by fps because small time interval vf = vi + a * t
-            first.vx += accelerationx / FPS;
-            first.vy += accelerationy / FPS;   
+            first.vx += acceleration.x / FPS;
+            first.vy += acceleration.y / FPS;   
         } 
     }
 
@@ -300,7 +310,7 @@ public class SimPanel extends JPanel implements Runnable {
         deleteMarked();
     }
 
-    // marges two particle by preserving mass and momentum
+    // marges two particles by preserving mass and momentum
     private Particle mergeParticles(Particle first, Particle second) {
         Particle result = new Particle();
 
@@ -316,7 +326,6 @@ public class SimPanel extends JPanel implements Runnable {
 
         return result;
     }
-
     
     private void updatePositions() {
         for (Particle particle : particles) {
@@ -432,7 +441,7 @@ public class SimPanel extends JPanel implements Runnable {
         // coordinates relative to frame
         for (int i=0; i<10; i++) {
 
-            int bufferX = MainFrame.WIDTH / 96;
+            int bufferX = MainFrame.WIDTH / 100;
             int bufferY = MainFrame.HEIGHT / 20;
             int fromX = bufferX+ i * (int)SCALE;
             int fromY = MainFrame.HEIGHT - bufferY;
