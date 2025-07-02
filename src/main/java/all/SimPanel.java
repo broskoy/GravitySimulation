@@ -22,15 +22,15 @@ public class SimPanel extends JPanel implements Runnable {
     final static boolean MERGE = false; // if particles should merge (exclusive with collision)
     final static boolean GRAVITY = true; // if particles should have gravity
     final static boolean COLLISION = false; // if particles should collide (exclusive with merge)
-    final static boolean DECELERATE = false; // slow down particle speed to compensate for errors
+    final static boolean DECELERATE = true; // slow down particle speed to compensate for errors
 
     // simulatin parameters
     public final static double SCALE = MainFrame.HEIGHT * 10 / 1080; // pixels in a unit (at 1080p it is 10)
     final static int FPS = 120; // frames per second
-    final static double GRAVITYSTRENGTH = 30; // strength of gravity
-    final static double DECELERATOR = 0.9999; // compensates for errors
-    final static double BARRIER = 100; // distance in units to the edges of the universe
-    final static double RANDOMVELOCITY = 10;
+    final static double GRAVITYSTRENGTH = 1; // strength of gravity
+    final static double DECELERATOR = 0.99; // compensates for errors
+    final static double BARRIER = 50; // distance in units to the edges of the universe
+    final static double RANDOMVELOCITY = 1;
 
     // array of particles
     public static ArrayList<Particle> particles = new ArrayList<>(); 
@@ -40,10 +40,10 @@ public class SimPanel extends JPanel implements Runnable {
     private static final int numberOfChunks = (int)(2 * BARRIER / CHUNKSIZE) + 1;
     public static ArrayList<Particle>[][] chunkGrid = new ArrayList[numberOfChunks][numberOfChunks];
 
-    // Double attraction[][] = {{1.0, 1.0, 0.0, -1.0}, 
-    //                          {1.0, 0.0, -1.0, 0.0},
-    //                          {0.0, -1.0, 0.0, 1.0},
-    //                          {-1.0, 0.0, 1.0, 0.0}};
+    Double attraction[][] = {{1.0, 1.0, -1.0, -1.0}, 
+                             {-1.0, 1.0, 1.0, 0.0},
+                             {1.0, -1.0, 1.0, 1.0},
+                             {1.0, 0.0, -1.0, 1.0}};
 
     public SimPanel() {
         //panel settings
@@ -56,10 +56,12 @@ public class SimPanel extends JPanel implements Runnable {
         this.setDoubleBuffered(true);
         this.setVisible(true);
 
+        //randomizeAttraction();
+
         create(100, 0, 1);
-        //create(10, 1, 1);
-        //create(1, 2, 16);
-        //create(1, 3, 16);
+        create(100, 1, 1);
+        create(100, 2, 1);
+        create(100, 3, 1);
     }
 
     // used to test fine details
@@ -82,6 +84,15 @@ public class SimPanel extends JPanel implements Runnable {
 
         particles.add(particle1);
         particles.add(particle2);
+    }
+
+    private void randomizeAttraction() {
+        Random random = new Random();
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++ )
+                attraction[i][j] = random.nextDouble(-1, 1);
+        }
     }
 
     public void startSimulationThread() {
@@ -232,6 +243,7 @@ public class SimPanel extends JPanel implements Runnable {
         System.out.println(momentumX + " " + momentumY);
     }
     
+    @SuppressWarnings("unused")
     private Vector newtonianForce(Particle first, Particle second) {
         // the distance betweent the particles
         Vector distance = new Vector(second.x - first.x, second.y - first.y);
@@ -240,14 +252,56 @@ public class SimPanel extends JPanel implements Runnable {
         // calculate force (squared comes from force formula and projection)
         double forceX = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared * distance.x;
         double forceY = GRAVITYSTRENGTH * first.mass * second.mass / distanceSquared * distance.y;
-        // force *= attraction[first.type][second.type];
+
+        // multiply by attraction
+        forceX *= attraction[first.type][second.type];
+        forceY *= attraction[first.type][second.type];
 
         // combine and return
         Vector force = new Vector(forceX, forceY);
         return force;
     }
+    
+    @SuppressWarnings("unused")
+    private Vector logForce(Particle first, Particle second) {
+        // the distance betweent the particles
+        Vector distance = new Vector(second.x - first.x, second.y - first.y);
+        double safeDistance = Math.max(distance.magnitude(), 0.1);
+
+        double logarithm = Math.log(safeDistance);
+        double function = -(4 * logarithm * logarithm / safeDistance)  + 2.16536;
+        double force = GRAVITYSTRENGTH * first.mass * second.mass * function;
+
+        Vector forceVector = new Vector(force * distance.x / safeDistance, force * distance.y / safeDistance);
+        return forceVector;
+    }
+
+    private Vector electrostaticForce(Particle first, Particle second) {
+        // the distance between the particles
+        Vector distance = new Vector(second.x - first.x, second.y - first.y);
+        double safeDistance = Math.max(distance.magnitude(), 0.1);
+
+        double force = GRAVITYSTRENGTH * first.mass * second.mass;
+
+        if (safeDistance < 2) {
+            force *= safeDistance - 2;
+        } else {
+            force *= attraction[first.type][second.type];
+            if (safeDistance < 6)
+                force *= (safeDistance / 2) - 1;
+            else {
+                if (safeDistance < 10)
+                    force *= - (safeDistance / 2) + 5 ;
+                    else force *= 0;
+            }
+        }
+
+        // TODO: can completely cut safeDistance
+        Vector forceVector = new Vector(force * distance.x / safeDistance, force * distance.y / safeDistance);
+        return forceVector;
+    }
+    
     // this method calculates the attraction between all particles
-    // it must be two way scince A pulls B while B also pulls A
     // we calculate the velocity through the forces particle have on eachother
     private void updateGravity() {
         for (Particle first : particles) {
@@ -257,7 +311,7 @@ public class SimPanel extends JPanel implements Runnable {
             for (Particle second : particles) {
                 if (first != second) {
                     
-                    totalForce.sum(newtonianForce(first, second));
+                    totalForce.sum(electrostaticForce(first, second));
                 }
             }
 
@@ -429,7 +483,7 @@ public class SimPanel extends JPanel implements Runnable {
                 case 0 -> g2d.setColor(Color.red);
                 case 1 -> g2d.setColor(Color.cyan);
                 case 2 -> g2d.setColor(Color.green);
-                case 3 -> g2d.setColor(Color.orange);
+                case 3 -> g2d.setColor(Color.yellow);
                 default -> System.out.println("big fuk");
             }
 
